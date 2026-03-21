@@ -4,6 +4,7 @@ set -e
 WG_CONF="/etc/wireguard/wg0.conf"
 mkdir -p /etc/wireguard
 
+# 注意：这里 if 和 [ 之间的空格已经补上了！
 if[ ! -f "$WG_CONF" ]; then
     echo "==> [WARP] 未检测到配置，正在全自动初始化 Cloudflare WARP..."
     
@@ -18,9 +19,9 @@ if[ ! -f "$WG_CONF" ]; then
     wget -qO wgcf "https://github.com/ViRb3/wgcf/releases/download/v2.2.22/wgcf_2.2.22_linux_${WGCF_ARCH}"
     chmod +x wgcf
     
-    echo "==>[WARP] 正在向 CF 注册设备..."
+    echo "==> [WARP] 正在向 CF 注册设备..."
     if ! ./wgcf register --accept-tos; then
-        echo "==> [ERROR] WARP 注册失败！"
+        echo "==>[ERROR] WARP 注册失败！"
         exit 1
     fi
     
@@ -31,7 +32,7 @@ if[ ! -f "$WG_CONF" ]; then
     rm -f wgcf wgcf-account.toml
     echo "==> [WARP] 配置生成成功！"
 else
-    echo "==> [WARP] 检测到已有配置，跳过注册。"
+    echo "==>[WARP] 检测到已有配置，跳过注册。"
 fi
 
 # ==========================================
@@ -39,8 +40,10 @@ fi
 # ==========================================
 # 1. 强制 AllowedIPs 仅接管 IPv4 流量
 sed -i 's/^AllowedIPs.*/AllowedIPs = 0.0.0.0\/0/g' "$WG_CONF"
+
 # 2. 删除 IPv6 Address 行
 sed -i '/Address.*:/d' "$WG_CONF" 
+
 # 3. 删除 DNS 行 (防 resolvconf 崩溃)
 sed -i '/^DNS.*/d' "$WG_CONF"
 
@@ -58,5 +61,5 @@ echo "==> [WARP] 当前出口 IP 已变更为："
 wget -qO- https://1.1.1.1/cdn-cgi/trace | grep ip=
 
 # 3. 启动 Go 原生网关
-echo "==>[Gateway] 正在启动 AIzaSy 极速网关..."
+echo "==> [Gateway] 正在启动 AIzaSy 极速网关..."
 exec ./gateway
