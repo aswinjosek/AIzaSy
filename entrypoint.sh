@@ -5,7 +5,7 @@ WG_CONF="/etc/wireguard/wg0.conf"
 mkdir -p /etc/wireguard
 
 # 注意：这里 if 和 [ 之间的空格已经补上了！
-if[ ! -f "$WG_CONF" ]; then
+if [ ! -f "$WG_CONF" ]; then
     echo "==> [WARP] 未检测到配置，正在全自动初始化 Cloudflare WARP..."
     
     ARCH=$(uname -m)
