@@ -85,7 +85,7 @@ const indexHTML = `
     <p>Just replace <code>generativelanguage.googleapis.com</code> with <code>aizasy.com</code>.</p>
     
     <pre><code>curl -H 'Content-Type: application/json' \
-     -X POST 'https://aizasy.com/v1beta/models/gemini-1.5-pro:generateContent?key=YOUR_API_KEY' \
+     -X POST 'https://gemini.aizasy.com/v1beta/models/gemini-1.5-pro:generateContent?key=YOUR_API_KEY' \
      -d '{
        "contents": [{"parts":[{"text": "Explain quantum computing in one sentence."}]}]
      }'</code></pre>
