@@ -1,9 +1,12 @@
 # 阶段 1：编译 Go 程序
-FROM golang:1.22-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS builder
+# 引入内置架构变量
+ARG TARGETARCH 
 WORKDIR /app
 COPY main.go .
 RUN go mod init aizasy && go mod tidy
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o gateway main.go
+# 动态注入 GOARCH
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -ldflags="-s -w" -o gateway main.go
 
 # 阶段 2：运行环境 (Alpine + WireGuard 内核控制工具)
 FROM alpine:latest
