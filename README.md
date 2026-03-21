@@ -43,8 +43,6 @@
 创建一个新目录并写入以下配置文件：
 
 ```yaml
-version: '3.8'
-
 services:
   aizasy-api:
     image: ghcr.io/ccbkkb/aizasy:latest
@@ -87,7 +85,7 @@ volumes:
 ### 2. 一键启动
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 > **提示：** 首次启动时，容器会在后台向 Cloudflare 申请免费的 WARP 账户并生成配置，大约需要 3-5 秒。你可以通过 `docker logs -f aizasy-gateway` 观察优雅的启动日志。
 
