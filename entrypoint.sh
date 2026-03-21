@@ -4,11 +4,11 @@ set -e
 WG_CONF="/etc/wireguard/wg0.conf"
 mkdir -p /etc/wireguard
 
-# 1. 自动生成配置
-if[ ! -f "$WG_CONF" ]; then
+# 1. 自动生成配置 (注意这里 if 和 [ 之间必须有空格)
+if [ ! -f "$WG_CONF" ]; then
     echo "==> [WARP] 未检测到配置，正在全自动初始化 Cloudflare WARP..."
     
-    # 【新增】动态获取当前系统的 CPU 架构
+    # 动态获取当前系统的 CPU 架构
     ARCH=$(uname -m)
     case "$ARCH" in
         x86_64) WGCF_ARCH="amd64" ;;
@@ -39,7 +39,7 @@ if[ ! -f "$WG_CONF" ]; then
     rm -f wgcf wgcf-account.toml
     echo "==> [WARP] 配置生成成功！"
 else
-    echo "==> [WARP] 检测到已有配置，跳过注册。"
+    echo "==>[WARP] 检测到已有配置，跳过注册。"
 fi
 
 # 2. 拉起 Linux 内核 WireGuard 网卡
