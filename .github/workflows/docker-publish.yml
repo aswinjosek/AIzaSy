@@ -5,8 +5,9 @@ name: Build and Publish Docker Image
 # ==========================================
 on:
   release:
-    types:[published]   # 当在 GitHub 页面上点击 "Publish release" 时触发
-  workflow_dispatch:     # 开启手动触发按钮 (Actions 页面)
+    # 注意这里：冒号后面必须有空格，或者采用换行缩进的写法
+    types: [published]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -16,7 +17,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
-    # 授权 GITHUB_TOKEN 推送镜像的权限
     permissions:
       contents: read
       packages: write
@@ -38,25 +38,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 自动提取和生成智能 Tag
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # 1. 如果是 Release (如 v1.2.3)，自动生成 1.2.3, 1.2, 1 三个版本的 tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            # 2. 如果是发布 Release，或者在主分支(main/master)上手动触发，强制打上 latest 标签
-            type=raw,value=latest,enable=${{ github.event_name == 'release' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # 依然保持跨平台多架构编译
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
