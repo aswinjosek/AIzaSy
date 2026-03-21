@@ -5,10 +5,19 @@ WG_CONF="/etc/wireguard/wg0.conf"
 mkdir -p /etc/wireguard
 
 # 1. 自动生成配置
-if [ ! -f "$WG_CONF" ]; then
+if[ ! -f "$WG_CONF" ]; then
     echo "==> [WARP] 未检测到配置，正在全自动初始化 Cloudflare WARP..."
     
-    wget -qO wgcf https://github.com/ViRb3/wgcf/releases/download/v2.2.22/wgcf_2.2.22_linux_amd64
+    # 【新增】动态获取当前系统的 CPU 架构
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64) WGCF_ARCH="amd64" ;;
+        aarch64) WGCF_ARCH="arm64" ;;
+        *) echo "==> [ERROR] 不支持的架构: $ARCH"; exit 1 ;;
+    esac
+    
+    echo "==> [WARP] 当前系统架构为 $ARCH，正在下载对应的 wgcf ($WGCF_ARCH)..."
+    wget -qO wgcf "https://github.com/ViRb3/wgcf/releases/download/v2.2.22/wgcf_2.2.22_linux_${WGCF_ARCH}"
     chmod +x wgcf
     
     echo "==> [WARP] 正在向 CF 注册设备..."
@@ -23,10 +32,9 @@ if [ ! -f "$WG_CONF" ]; then
     # 移动配置
     mv wgcf-profile.conf "$WG_CONF"
     
-    # 【避坑关键】为了防止 Docker 内容器没有开启 IPv6 导致 wg-quick 报错退出
-    # 我们将 AllowedIPs 强制改为仅接管 IPv4 流量 (这对访问 Google API 足够了)
+    # 强制 AllowedIPs 仅接管 IPv4 流量 (避免 Docker 内 IPv6 路由报错)
     sed -i 's/^AllowedIPs.*/AllowedIPs = 0.0.0.0\/0/g' "$WG_CONF"
-    sed -i '/Address.*:/d' "$WG_CONF" # 删除 IPv6 Address 行
+    sed -i '/Address.*:/d' "$WG_CONF" 
     
     rm -f wgcf wgcf-account.toml
     echo "==> [WARP] 配置生成成功！"
