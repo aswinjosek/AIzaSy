@@ -4,11 +4,10 @@ set -e
 WG_CONF="/etc/wireguard/wg0.conf"
 mkdir -p /etc/wireguard
 
-# 1. 自动生成配置 (注意这里 if 和 [ 之间必须有空格)
+# 1. 自动生成配置
 if [ ! -f "$WG_CONF" ]; then
-    echo "==> [WARP] 未检测到配置，正在全自动初始化 Cloudflare WARP..."
+    echo "==>[WARP] 未检测到配置，正在全自动初始化 Cloudflare WARP..."
     
-    # 动态获取当前系统的 CPU 架构
     ARCH=$(uname -m)
     case "$ARCH" in
         x86_64) WGCF_ARCH="amd64" ;;
@@ -29,18 +28,28 @@ if [ ! -f "$WG_CONF" ]; then
     echo "==> [WARP] 正在生成 WireGuard 配置文件..."
     ./wgcf generate
     
-    # 移动配置
     mv wgcf-profile.conf "$WG_CONF"
-    
-    # 强制 AllowedIPs 仅接管 IPv4 流量 (避免 Docker 内 IPv6 路由报错)
-    sed -i 's/^AllowedIPs.*/AllowedIPs = 0.0.0.0\/0/g' "$WG_CONF"
-    sed -i '/Address.*:/d' "$WG_CONF" 
-    
     rm -f wgcf wgcf-account.toml
     echo "==> [WARP] 配置生成成功！"
 else
-    echo "==>[WARP] 检测到已有配置，跳过注册。"
+    echo "==> [WARP] 检测到已有配置，跳过注册。"
 fi
+
+# ==========================================
+# 【核心修复区：Docker 环境兼容性强力洗白】
+# 无论配置是新生成的，还是从数据卷读取的旧配置，通通在拉起前执行清洗
+# ==========================================
+
+# 1. 强制 AllowedIPs 仅接管 IPv4 流量 (防止 Docker 内不支持 IPv6 路由)
+sed -i 's/^AllowedIPs.*/AllowedIPs = 0.0.0.0\/0/g' "$WG_CONF"
+
+# 2. 删除 IPv6 Address 行
+sed -i '/Address.*:/d' "$WG_CONF" 
+
+# 3. 【解决你的报错】强制删除 DNS 行，阻止 wg-quick 调用 resolvconf 修改容器 DNS！
+sed -i '/^DNS.*/d' "$WG_CONF"
+
+# ==========================================
 
 # 2. 拉起 Linux 内核 WireGuard 网卡
 echo "==> [WARP] 正在启动 Linux 内核级 wg0 网卡..."
