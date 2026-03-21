@@ -1,11 +1,15 @@
 name: Build and Publish Docker Image
 
 # ==========================================
-# 触发条件：发布 Release 时 / 手动点击触发
+# 触发条件：
+# 1. 每次 Push 代码到 main 或 master 分支
+# 2. 发布 Release 版本时
+# 3. 手动点击触发按钮
 # ==========================================
 on:
+  push:
+    branches: [ "main", "master" ]
   release:
-    # 注意这里：冒号后面必须有空格，或者采用换行缩进的写法
     types: [published]
   workflow_dispatch:
 
@@ -44,9 +48,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            # 如果是打 Tag 发版，生成版本号标签 (如 1.0.0, 1.0)
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
+            
+            # 无论是 Push 到主分支、发版还是手动触发，都打上 latest 标签！
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
